@@ -110,6 +110,121 @@
             if (platform) {
                 debugParts.push('platform=' + navigator.platform);
                 if (platform.indexOf('armv8') !== -1 || platform.indexOf('aarch64') !== -1) {
-                    return { apk: 'qusai-app', name: '64 بت', method: 'navigator.platform', debug: debugParts };
+                    return { apk: 'arm64-v8a', name: '64 بت', method: 'navigator.platform', debug: debugParts };
                 }
                 if (platform.indexOf('armv7') !== -1) {
+                    return { apk: 'armeabi-v7a', name: '32 بت', method: 'navigator.platform', debug: debugParts };
+                }
+            }
+
+            // ── الطريقة 1: getHighEntropyValues (Chrome 90+) ──
+            if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+                try {
+                    var vals = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'model']);
+                    debugParts.push('uaData=' + JSON.stringify(vals));
+
+                    if (vals.bitness) {
+                        var arch = (vals.architecture || '').toLowerCase();
+                        var bits = vals.bitness;
+                        if ((arch === 'arm' || arch === 'aarch64') && bits === '64') {
+                            return { apk: 'arm64-v8a', name: '64 بت', method: 'UAData', debug: debugParts };
+                        }
+                        if (arch === 'arm' && bits === '32') {
+                            return { apk: 'armeabi-v7a', name: '32 بت', method: 'UAData', debug: debugParts };
+                        }
+                    }
+                } catch (e) {
+                    debugParts.push('uaDataErr=' + e.message);
+                }
+            }
+
+            // ── الطريقة 2: userAgent الكامل (للأجهزة القديمة) ──
+            if (ua.indexOf('aarch64') !== -1 || ua.indexOf('arm64') !== -1) {
+                return { apk: 'arm64-v8a', name: '64 بت', method: 'UserAgent', debug: debugParts };
+            }
+            if (ua.indexOf('armv7') !== -1 || ua.indexOf('armv7l') !== -1) {
+                return { apk: 'armeabi-v7a', name: '32 بت', method: 'UserAgent', debug: debugParts };
+            }
+
+            // ── الطريقة 3: طراز الجهاز (قاعدة بيانات موسعة) ──
+            var modelMatch = ua.match(/\(([^)]+)\)/);
+            if (modelMatch) {
+                var m = modelMatch[1].toLowerCase();
+                debugParts.push('model=' + m);
+
+                // Samsung 64-bit (S8 فما فوق، Note8 فما فوق، A50s فما فوق...)
+                var samsung64 = /sm-g95|sm-g96|sm-g97|sm-g98|sm-g99|sm-n95|sm-n96|sm-n97|sm-n98|sm-f90|sm-f91|sm-a73|sm-a53|sm-a54|sm-a34|sm-s90|sm-m54|sm-m34|sm-m14/;
+                // Xiaomi / Redmi / Poco 64-bit
+                var xiaomi64 = /mi 9|mi 10|mi 11|mi 12|mi 13|redmi note 9|redmi note 1[0-9]|redmi 1[0-9]|poco f[2-9]|poco x[3-9]|poco m[3-9]/;
+                // Google Pixel / OnePlus / Realme / Oppo / Vivo 64-bit
+                var other64 = /pixel [3-9]|pixel [a-z]|oneplus [6-9]|oneplus 1[0-9]|realme gt|realme [0-9]+pro|oppo r[1-9][0-9]|vivo v[2-9][0-9]/;
+                // Huawei / Honor حديث
+                var huawei64 = /huawei p[3-9][0-9]|huawei mate [3-9][0-9]|honor [2-9][0-9]|nova [5-9]/;
+
+                if (samsung64.test(m) || xiaomi64.test(m) || other64.test(m) || huawei64.test(m)) {
+                    return { apk: 'arm64-v8a', name: '64 بت', method: 'طراز الجهاز', debug: debugParts };
+                }
+            }
+
+            // ── الطريقة 4: Android 10+ غالباً 64-bit ──
+            var androidVer = ua.match(/android\s+(\d+)/);
+            if (androidVer) {
+                var v = parseInt(androidVer[1]);
+                debugParts.push('android=' + v);
+                if (v >= 12) {
+                    // Android 12+ يتطلب 64-bit تقريباً للأجهزة الجديدة
+                    return { apk: 'arm64-v8a', name: '64 بت', method: 'Android 12+', debug: debugParts };
+                }
+            }
+
+            // ── افتراض آمن: 32-bit يعمل على الجميع ──
+            return { 
+                apk: 'armeabi-v7a', 
+                name: '32 بت (عام)', 
+                method: 'افتراضي آمن',
+                note: 'النسخة 32 بتن تعمل على جميع الأجهزة بما فيها 64 بت',
+                debug: debugParts
+            };
+        }
+
+        // ==========================================
+        // حدث الضغط
+        // ==========================================
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
+            var btn = document.getElementById('downloadBtn');
+            var info = document.getElementById('info');
+            var loader = document.getElementById('loader');
+            var badge = document.getElementById('badge');
+            var debug = document.getElementById('debug');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري التعرف...';
+            loader.style.display = 'block';
+            info.innerHTML = '';
+            badge.textContent = '';
+            debug.textContent = '';
+
+            var result = await getArchitecture();
+
+            badge.textContent = 'جهازك: ' + result.name + ' | طريقة: ' + result.method;
+
+            var msg = '<span class="ok">✓ تم التعرف</span>';
+            if (result.note) msg += '<br><span class="warn">' + result.note + '</span>';
+            info.innerHTML = msg;
+            debug.textContent = result.debug.join(' | ');
+
+            btn.textContent = '⬇️ جاري تحميل ' + result.apk + '...';
+
+            var url = 'https://github.com/QUSAI-ALPRINS/markt-download/releases/download/v145.0.0+145/app-' + result.apk + '.apk';
+            window.location.href = url;
+
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.textContent = '📲 تحميل التطبيق الآن';
+                loader.style.display = 'none';
+                info.innerHTML += '<br><br>إذا لم يبدأ: <a href="' + url + '" style="color:#8B0000;font-weight:bold;">اضغط هنا</a>';
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
