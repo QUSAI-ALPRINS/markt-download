@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحميل تطبيق - قصي سوفت بقالة المليكي</title>
+    
+    <!-- مكتبة الأيقونات الاحترافية -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <meta name="google-site-verification" content="7g3uTInjNEsof8zx2Kx7w5spJUizWoORm-6T0ftiA7U" />
+    <meta name="description" content="التطبيق الرسمي لـ بقالة المليكي (المعروفة أيضاً بـ بقالة الأمير). نظام إدارة إداري متطور لقصي سوفت لإدارة ديون وحسابات البقالة.">
+    <meta name="keywords" content="بقالة المليكي, بقالة الأمير, نظام إدارة ديون بقالة المليكي, المليكي, قصي سوفت للإدارة الذكية,مدخل قرية عميقة,,نظام محاسبة بقالة الأمير, قصي سوفت, إدارة حسابات بقالة المليكي ,الأمير">
+
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,7 +35,7 @@
             border: 1px solid rgba(139,0,0,0.12);
         }
         .logo {
-            font-size: 60px;
+            font-size: 28px; /* تم تعديل الحجم ليناسب الأيقونات */
             background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
             width: 90px;
             height: 90px;
@@ -36,6 +44,10 @@
             margin: 0 auto 15px;
             color: #fff;
             box-shadow: 0 8px 25px rgba(139,0,0,0.35);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
         h1 { font-size: 28px; color: #4a0e0e; margin-bottom: 5px; }
         .sub { color: #6b4e4e; font-size: 14px; margin-bottom: 25px; }
@@ -80,7 +92,13 @@
 </head>
 <body>
     <div class="card">
-        <div class="logo">🛒</div>
+        <!-- الأيقونات الاحترافية -->
+        <div class="logo">
+            <i class="fas fa-lock"></i>
+            <i class="fas fa-pen"></i>
+            <i class="fas fa-book"></i>
+        </div>
+        
         <h1>قصــــــــي سوفــــت بقالة المليكي</h1>
         <p class="sub">لإدخال ديون بقالة المليكي وعرض ديون الزبائن وتقارير متطورة جدا</p>
         <p class="sub">برمجة وتطوير وتصميم قصي المليكي 778010546</p>
@@ -96,17 +114,11 @@
     </div>
 
     <script>
-        // ==========================================
-        // دالة التعرف على المعالج - النهائية
-        // ==========================================
         async function getArchitecture() {
             var ua = navigator.userAgent.toLowerCase();
             var platform = (navigator.platform || '').toLowerCase();
             var debugParts = [];
 
-            // ── الطريقة 0: navigator.platform (الأكثر موثوقية!) ──
-            // Chrome 64-bit Android: "Linux armv8l" أو "Linux aarch64"
-            // Chrome 32-bit Android: "Linux armv7l"
             if (platform) {
                 debugParts.push('platform=' + navigator.platform);
                 if (platform.indexOf('armv8') !== -1 || platform.indexOf('aarch64') !== -1) {
@@ -117,7 +129,6 @@
                 }
             }
 
-            // ── الطريقة 1: getHighEntropyValues (Chrome 90+) ──
             if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
                 try {
                     var vals = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'model']);
@@ -138,7 +149,6 @@
                 }
             }
 
-            // ── الطريقة 2: userAgent الكامل (للأجهزة القديمة) ──
             if (ua.indexOf('aarch64') !== -1 || ua.indexOf('arm64') !== -1) {
                 return { apk: 'arm64-v8a', name: '64 بت', method: 'UserAgent', debug: debugParts };
             }
@@ -146,19 +156,14 @@
                 return { apk: 'armeabi-v7a', name: '32 بت', method: 'UserAgent', debug: debugParts };
             }
 
-            // ── الطريقة 3: طراز الجهاز (قاعدة بيانات موسعة) ──
             var modelMatch = ua.match(/\(([^)]+)\)/);
             if (modelMatch) {
                 var m = modelMatch[1].toLowerCase();
                 debugParts.push('model=' + m);
 
-                // Samsung 64-bit (S8 فما فوق، Note8 فما فوق، A50s فما فوق...)
                 var samsung64 = /sm-g95|sm-g96|sm-g97|sm-g98|sm-g99|sm-n95|sm-n96|sm-n97|sm-n98|sm-f90|sm-f91|sm-a73|sm-a53|sm-a54|sm-a34|sm-s90|sm-m54|sm-m34|sm-m14/;
-                // Xiaomi / Redmi / Poco 64-bit
                 var xiaomi64 = /mi 9|mi 10|mi 11|mi 12|mi 13|redmi note 9|redmi note 1[0-9]|redmi 1[0-9]|poco f[2-9]|poco x[3-9]|poco m[3-9]/;
-                // Google Pixel / OnePlus / Realme / Oppo / Vivo 64-bit
                 var other64 = /pixel [3-9]|pixel [a-z]|oneplus [6-9]|oneplus 1[0-9]|realme gt|realme [0-9]+pro|oppo r[1-9][0-9]|vivo v[2-9][0-9]/;
-                // Huawei / Honor حديث
                 var huawei64 = /huawei p[3-9][0-9]|huawei mate [3-9][0-9]|honor [2-9][0-9]|nova [5-9]/;
 
                 if (samsung64.test(m) || xiaomi64.test(m) || other64.test(m) || huawei64.test(m)) {
@@ -166,18 +171,15 @@
                 }
             }
 
-            // ── الطريقة 4: Android 10+ غالباً 64-bit ──
             var androidVer = ua.match(/android\s+(\d+)/);
             if (androidVer) {
                 var v = parseInt(androidVer[1]);
                 debugParts.push('android=' + v);
                 if (v >= 12) {
-                    // Android 12+ يتطلب 64-bit تقريباً للأجهزة الجديدة
                     return { apk: 'arm64-v8a', name: '64 بت', method: 'Android 12+', debug: debugParts };
                 }
             }
 
-            // ── افتراض آمن: 32-bit يعمل على الجميع ──
             return { 
                 apk: 'armeabi-v7a', 
                 name: '32 بت (عام)', 
@@ -187,9 +189,6 @@
             };
         }
 
-        // ==========================================
-        // حدث الضغط
-        // ==========================================
         document.getElementById('downloadBtn').addEventListener('click', async function() {
             var btn = document.getElementById('downloadBtn');
             var info = document.getElementById('info');
